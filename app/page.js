@@ -18,6 +18,16 @@ const Home = () => {
   const [uploadMessage, setUploadMessage] = useState('Upload Image');
   const [uploadButtonDisabled, setUploadButtonDisabled] = useState(true);
 
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(image);
+    setCopied(true);
+    setTimeout(() => {
+      setCopied(false);
+    }, 2000); // Reset copied state after 2 seconds
+  };
+
   const submit = async (e) => {
     e.preventDefault();
 
@@ -66,61 +76,64 @@ const Home = () => {
 
           <div className="max-w-xl my-6 flex flex-col justify-center items-center bg-black">
 
-              {/* image  */}
-              <div className="pt-8 py-4">
-                <div className="flex flex-col space-x-4">
-                  {isInputVisible && image && (
-                    <img src={createObjectURL} className='rounded-3xl mb-4' />
-                  )}
+            {/* image  */}
+            <div className="pt-8 py-4">
+              <div className="flex flex-col space-x-4">
+                {isInputVisible && image && (
+                  <img src={createObjectURL} className='rounded-3xl mb-4' />
+                )}
 
-                  {isInputVisible && (
-                    <input
-                      type="file"
-                      onChange={(e) => {
-                        setImage(e.target.files[0])
-                        setCreateObjectURL(URL.createObjectURL(e.target.files[0]))
-                        if (e.target.files.length > 0) {
-                          setUploadButtonDisabled(false); // Enable the button
-                        } else {
-                          setUploadButtonDisabled(true); // Disable the button
-                        }
-                      }}
-                    />
-                  )}
+                {isInputVisible && (
+                  <input
+                    type="file"
+                    onChange={(e) => {
+                      setImage(e.target.files[0])
+                      setCreateObjectURL(URL.createObjectURL(e.target.files[0]))
+                      if (e.target.files.length > 0) {
+                        setUploadButtonDisabled(false); // Enable the button
+                      } else {
+                        setUploadButtonDisabled(true); // Disable the button
+                      }
+                    }}
+                  />
+                )}
 
-                  {isInputVisible && (
-                    <button
-                      className={`bg-sky-500 text-lg px-4 p-2 rounded-full text-white ${uploadSuccess ? 'bg-green-500' : ''}`}
-                      onClick={uploadSuccess ? null : submit}
-                      disabled={uploading || uploadButtonDisabled}
-                    >
-                      {uploadMessage}
-                    </button>
-                  )}
+                {isInputVisible && (
+                  <button
+                    className={`bg-sky-500 text-lg px-4 p-2 rounded-full text-white ${uploadSuccess ? 'bg-green-500' : ''}`}
+                    onClick={uploadSuccess ? null : submit}
+                    disabled={uploading || uploadButtonDisabled}
+                  >
+                    {uploadMessage}
+                  </button>
+                )}
 
-                  {successMessage && (
-                    <div className="text-green-500 mt-2">{successMessage}</div>
-                  )}
+                {successMessage && (
+                  <div className="text-green-500 mt-2">{successMessage}</div>
+                )}
 
-                </div>
               </div>
+            </div>
 
-              {showurl && (
+            {showurl && (
+              <>
                 <div className="mt-4">
                   <p className="text-lg">Saved Image:</p>
                   <a href={image} target="_blank" rel="noopener noreferrer">{image}</a>
                 </div>
-              )}
 
-              {/* Copy Link! */}
-              <div>
-                <div className="flex flex-row justify-end">
-                  <button type="submit" className="hover:text-white text-sky-500 hover:bg-sky-500 rounded-full text-lg px-4 py-1 font-bold">
-                    Copy Link!
-                  </button>
+                <div>
+                  <div className="flex flex-row justify-end">
+                    <button
+                      className="hover:text-white text-sky-500 hover:bg-sky-500 rounded-full text-lg px-4 py-1 font-bold"
+                      onClick={copyToClipboard}
+                    >
+                      {copied ? 'Copied!' : 'Copy Link!'}
+                    </button>
+                  </div>
                 </div>
-              </div>
-
+              </>
+            )}
 
           </div>
         </div>
