@@ -50,38 +50,6 @@ const Home = () => {
   }
 
 
-  const handleSubmit = async (e, image) => {
-    e.preventDefault();
-
-    // if (!image) {
-    //   alert('Please upload an image before submitting.');
-    //   return;
-    // }
-
-    try {
-      const formData = new FormData();
-      formData.append('file', image);
-
-      const res = await fetch(`${process.env.NEXT_PUBLIC_HOST}/api/post`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      const json = await res.json();
-      console.log(json, "Hello");
-
-      if (json.success) {
-        setIsInputVisible(false);
-        setSuccessMessage('Image uploaded');
-        setPostMessage('Post Created Successfully');
-      } else {
-        throw new Error('Failed to create post');
-      }
-    } catch (error) {
-      alert('An error occurred. Please try again.');
-    }
-  };
-
   return (
     <>
       <div className="bg-black text-white">
@@ -97,8 +65,6 @@ const Home = () => {
           )}
 
           <div className="max-w-xl my-6 flex flex-col justify-center items-center bg-black">
-
-            <form onSubmit={handleSubmit} className="flex flex-col bg-gray-800 rounded-xl">
 
               {/* image  */}
               <div className="pt-8 py-4">
@@ -155,7 +121,6 @@ const Home = () => {
                 </div>
               </div>
 
-            </form>
 
           </div>
         </div>
