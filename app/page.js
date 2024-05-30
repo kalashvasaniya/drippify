@@ -66,7 +66,7 @@ const Home = () => {
 
         <div className="flex flex-col justify-center items-center pb-52">
 
-          <div className="text-4xl text-sky-400 pt-12 font-mono">
+          <div className="font-bold text-5xl md:text-6xl lg:text-7xl text-center md:text-left">
             Drippify
           </div>
 
