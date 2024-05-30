@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-    output: 'export',
+export const images = {
+    domains: ['res.cloudinary.com'],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    loader: 'default',
+    path: '/_next/image',
 };
-
-export default nextConfig;
