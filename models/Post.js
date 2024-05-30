@@ -6,6 +6,11 @@ const PostSchema = new Schema({
         type: String,
         default: '',
     },
+    slugPostLink: {
+        type: String,
+        default: '',
+        unique: true,
+    },
 }, {
     timestamps: true,
 });
