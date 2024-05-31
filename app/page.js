@@ -1,10 +1,8 @@
 "use client"
 import React from 'react'
 import { useState } from 'react'
-import { Analytics } from "@vercel/analytics/react"
 
 const Home = () => {
-  <Analytics/>
 
   const [image, setImage] = useState('');
   const [createObjectURL, setCreateObjectURL] = useState(null);
