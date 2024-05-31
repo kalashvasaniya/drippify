@@ -4,7 +4,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Drippify",
+  title: "Drippify | image/PDF to URL",
   description: "Drippfy converts any image/PDF file into a shareable public link (For Free)",
 };
 
