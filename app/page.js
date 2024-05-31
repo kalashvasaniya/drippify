@@ -7,8 +7,6 @@ const Home = () => {
   const [image, setImage] = useState('');
   const [createObjectURL, setCreateObjectURL] = useState(null);
 
-  const [successMessage, setSuccessMessage] = useState(null);
-  const [postMessage, setPostMessage] = useState('')
   const [isInputVisible, setIsInputVisible] = useState(true);
   const [showurl, setshowurl] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -38,7 +36,8 @@ const Home = () => {
       setUploadSuccess(true);
       setUploadMessage('Upload Successful');
       setshowurl(true);
-    }, 5000);
+      setIsInputVisible(false);
+    }, 10000);
     const formData = new FormData();
     formData.append('file', image);
     formData.append('upload_preset', 'thelinko');
@@ -62,27 +61,23 @@ const Home = () => {
     <>
       <div className="bg-black text-white">
 
-        <div className="flex flex-col justify-center items-center pb-52">
+        <div className="flex flex-col justify-center items-center pt-10 md:pt-20">
 
           <div className="font-bold text-5xl md:text-6xl lg:text-7xl text-center md:text-left">
             Drippify
           </div>
 
-          {postMessage && (
-            <p className="text-green-400 md:text-xl text-lg py-4 font-bold underline underline-offset-1">{postMessage}</p>
-          )}
-
           <div className="max-w-xl my-6 flex flex-col justify-center items-center bg-black">
 
             {/* image  */}
-            <div className="pt-8 py-4">
+            <div className="pt-8">
               <div className="flex flex-col space-x-4">
                 {isInputVisible && image && (
                   <img src={createObjectURL} className='rounded-3xl mb-4' />
                 )}
 
                 {isInputVisible && (
-                  <input
+                  <input className='mt-4'
                     type="file"
                     onChange={(e) => {
                       setImage(e.target.files[0])
@@ -106,24 +101,21 @@ const Home = () => {
                   </button>
                 )}
 
-                {successMessage && (
-                  <div className="text-green-500 mt-2">{successMessage}</div>
-                )}
-
               </div>
             </div>
 
             {showurl && (
               <>
-                <div className="mt-4">
-                  <p className="text-lg">Saved Image:</p>
-                  <a href={image} target="_blank" rel="noopener noreferrer">{image}</a>
+                <div className="mt-8">
+                  <div className='text-green-500'>
+                    <span className='flex flex-row justify-center text-center'>Thank you for choosing Drippify <br /> we're excited to have you in our community!</span>
+                  </div>
                 </div>
 
                 <div>
                   <div className="flex flex-row justify-end">
                     <button
-                      className="hover:text-white text-sky-500 hover:bg-sky-500 rounded-full text-lg px-4 py-1 font-bold"
+                      className="text-white bg-sky-500 rounded-full text-lg px-4 py-1 font-bold mt-4"
                       onClick={copyToClipboard}
                     >
                       {copied ? 'Copied!' : 'Copy Link!'}
