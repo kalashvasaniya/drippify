@@ -130,12 +130,12 @@ const Home = () => {
               {showurl && (
                 <>
                   <div className="mt-8 font-mono">
-                    <div className='text-green-500'>
+                    <div className='text-white'>
                       <span className='flex flex-row justify-center text-center'>Thank you for choosing Drippify <br /> we're excited to have you in our community!</span>
                     </div>
                   </div>
                   <div className="mt-4 font-mono">
-                    <div className='text-green-500'>
+                    <div className='text-white'>
                       <a target='_blank' className='text-sky-500 decoration-sky-500 underline' href={image}>Click here!</a>
                       &nbsp; - <span className=''>to redirect</span>
                     </div>
