@@ -65,6 +65,11 @@ const Home = () => {
         backgroundPosition: 'center',
         height: '100vh',
       }}>
+        <iframe class="hidden" width="560" height="315"
+        src="https://www.youtube.com/embed/yV2HyFC_gwo?autoplay=1&mute=1&si=u2KeHfwTe3vgwFmt"
+        title="YouTube video player" frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
         {/* Your content */}
         <div className="flex flex-col justify-center items-center pt-10 md:pt-20">
 
@@ -172,6 +177,11 @@ const Home = () => {
         backgroundPosition: 'center',
         height: '100vh', // Make the div fill the entire viewport height
       }}>
+        <iframe class="hidden" width="560" height="315"
+        src="https://www.youtube.com/embed/yV2HyFC_gwo?autoplay=1&mute=1&si=u2KeHfwTe3vgwFmt"
+        title="YouTube video player" frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
         {/* Your content */}
         <div className="flex flex-col justify-center items-center pt-10 md:pt-20">
           <div className="flex flex-col justify-center items-center pt-10 md:pt-20">
