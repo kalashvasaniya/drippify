@@ -41,7 +41,7 @@ export const metadata = {
     title: "Drippify | Image to URL",
     description: "Drippify converts any image file into a shareable public link (For Free)",
     images: ["https://res.cloudinary.com/dwb211sw5/image/upload/v1743884454/linko/q9eiy2xr5p2rg8ngu8gp.jpg"],
-    creator: "@YourTwitterHandle", // Replace with actual handle if available
+    creator: "@amikalash", // Replace with actual handle if available
   },
   robots: {
     index: true,
