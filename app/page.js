@@ -203,7 +203,7 @@ export default function Home() {
         {/* Result URL Section */}
         {showURL && typeof image === "string" && (
           <div className="mt-8 w-full">
-            <div className="font-mono text-center text-white">
+            {/* <div className="font-mono text-center text-white">
               Thank you for choosing Drippify
               <br />
               <span>
@@ -218,7 +218,7 @@ export default function Home() {
                 </a>
                 !
               </span>
-            </div>
+            </div> */}
 
             <div className="mt-4 font-mono text-center text-white">
               <a
