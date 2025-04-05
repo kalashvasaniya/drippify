@@ -1,283 +1,228 @@
-"use client"; // Required for hooks and browser APIs
-
-import React, { useState, useCallback, useRef } from "react";
+"use client"
+import React from "react";
+import { useState, useCallback, useRef } from "react";
 import Image from "next/image";
 import { Loader2, Copy, Check, Upload, FileUp } from "lucide-react";
 
 export default function Home() {
-  // State variables
-  // 'image' holds the File object before upload, or the Cloudinary URL string after upload
-  const [image, setImage] = useState < File | string | null > (null);
-  // 'previewURL' holds the temporary blob URL for the selected file preview
-  const [previewURL, setPreviewURL] = useState < string | null > (null);
-  // 'isInputVisible' controls visibility of the file selection/preview/upload button area
+  // Removed type definitions from useState
+  const [image, setImage] = useState(null);
+  const [previewURL, setPreviewURL] = useState(null);
   const [isInputVisible, setIsInputVisible] = useState(true);
-  // 'showURL' controls visibility of the result section (URL, copy button)
   const [showURL, setShowURL] = useState(false);
-  // 'uploading' indicates if an upload is in progress
   const [uploading, setUploading] = useState(false);
-  // 'uploadSuccess' indicates if the last upload was successful
   const [uploadSuccess, setUploadSuccess] = useState(false);
-  // 'uploadMessage' displays status messages on the upload button
   const [uploadMessage, setUploadMessage] = useState("START UPLOADING");
-  // 'copied' indicates if the URL has been copied to the clipboard
+  const [uploadButtonDisabled, setUploadButtonDisabled] = useState(true);
   const [copied, setCopied] = useState(false);
-  // Ref for the hidden file input element
-  const fileInputRef = useRef < HTMLInputElement > (null);
+  const fileInputRef = useRef(null); // Removed type definition from useRef
+  const [imageUrl, setImageUrl] = useState(null); // Or ""
 
-  // --- Callbacks ---
-
-  // Function to copy the uploaded image URL to clipboard
   const copyToClipboard = useCallback(() => {
-    // Ensure 'image' is the URL string before copying
     if (typeof image === "string") {
       navigator.clipboard.writeText(image);
       setCopied(true);
-      // Reset the copied state after 3 seconds
-      setTimeout(() => setCopied(false), 3000);
+      setTimeout(() => setCopied(false), 3000); // Reset after 3 seconds
     }
-  }, [image]); // Dependency: image state
+  }, [image]);
 
-  // Function to handle file selection from the input
-  const handleFileChange = useCallback((e) => {
+  const handleFileChange = useCallback((e) => { // Removed type annotation for event 'e'
     const file = e.target.files?.[0];
     if (file) {
-      setImage(file); // Set state to the selected File object
-
-      // Create a temporary URL for preview
+      setImage(file);
       const objectUrl = URL.createObjectURL(file);
+      setPreviewURL(objectUrl);
+      setUploadButtonDisabled(false);
+      setUploadMessage("START UPLOADING"); // Reset message when new file selected
+      setUploadSuccess(false); // Reset success state
+      setShowURL(false); // Hide URL section if a new file is selected
+      setIsInputVisible(true); // Ensure input area is visible
 
-      // Set the preview URL, revoking the previous one if it exists
+      // Clean up the object URL when component unmounts or when a new file is selected
+      // This cleanup should happen when the effect dependencies change or component unmounts.
+      // The return function from useCallback isn't the right place for side-effect cleanup based on file changes.
+      // A useEffect hook would be better if complex cleanup is needed, but for simple revokeObjectURL,
+      // doing it before setting a *new* previewURL is often sufficient. Let's revoke the *previous* one if it exists.
+
+      // Revoke previous URL if it exists before setting a new one
+      // (Self-contained within the handler is simpler here than useEffect)
       setPreviewURL(prevUrl => {
         if (prevUrl) {
-          URL.revokeObjectURL(prevUrl); // Clean up previous blob URL
+          URL.revokeObjectURL(prevUrl);
         }
-        return objectUrl; // Set the new blob URL
+        return objectUrl; // Set the new URL
       });
 
-      // Reset states for a new upload attempt
-      setUploadMessage("START UPLOADING");
-      setUploadSuccess(false);
-      setShowURL(false); // Hide result section
-      setIsInputVisible(true); // Ensure input section is visible
-      setCopied(false); // Reset copy status
-
     } else {
-      // Handle case where user cancels file selection
+      // Optional: Handle case where user cancels file selection
       setImage(null);
-      setPreviewURL(prevUrl => { // Revoke if a preview URL existed
+      setPreviewURL(prevUrl => { // Revoke if one existed
         if (prevUrl) {
           URL.revokeObjectURL(prevUrl);
         }
         return null;
       });
-      // Reset relevant states
-      setUploadMessage("START UPLOADING");
-      setUploadSuccess(false);
+      setUploadButtonDisabled(true);
     }
-  }, []); // No dependencies needed as state setters are stable
+  }, []); // Removed state setters from dependencies as they are stable
 
-  // Function to submit the image file to Cloudinary
-  const submit = useCallback(async (e) => {
-    e.preventDefault();
-    // Guard against non-file image state or no image
-    if (!image || typeof image !== 'object' || !(image instanceof File)) return;
+  const submit = useCallback(
+    async (e) => { // Removed type annotation for event 'e'
+      e.preventDefault();
+      // Ensure image is a File object before proceeding
+      if (!image || typeof image === "string") return;
 
-    setUploading(true);
-    setUploadMessage("UPLOADING...");
-    setUploadSuccess(false); // Ensure success state is false initially
+      setUploading(true);
+      setUploadMessage("UPLOADING...");
+      setUploadButtonDisabled(true); // Disable button during upload
 
-    const formData = new FormData();
-    formData.append("file", image); // Append the File object
+      const formData = new FormData();
+      formData.append("file", image); // image is guaranteed to be File here
 
-    // Append Cloudinary configuration - **Use Environment Variables**
-    const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const folder = "linko"; // Optional: Specify a folder in Cloudinary
+      // IMPORTANT: Use Environment Variables for sensitive data like cloud name and presets!
+      formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "thelinko"); // Replace "thelinko" with default or error if var missing
+      formData.append("cloud_name", process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dwb211sw5");   // Replace "dwb211sw5"
+      formData.append("folder", "linko"); // Folder name is usually less sensitive
 
-    if (!uploadPreset || !cloudName) {
-      console.error("Cloudinary environment variables (NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET, NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME) are not set!");
-      setUploadMessage("CONFIG ERROR");
-      setUploading(false);
-      return;
-    }
+      // Construct URL using environment variable if available
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dwb211sw5";
+      const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
 
-    formData.append("upload_preset", uploadPreset);
-    formData.append("cloud_name", cloudName);
-    formData.append("folder", folder);
-
-    const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
-
-    try {
-      const response = await fetch(uploadUrl, {
-        method: "POST",
-        body: formData,
-      }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        // IMPORTANT: Update 'image' state to the returned URL string
-        setImage(data.secure_url);
-        setUploadSuccess(true);
-        setUploadMessage("UPLOAD SUCCESSFUL");
-        setShowURL(true); // Show the result section
-        setIsInputVisible(false); // Hide the input/preview section
-        setPreviewURL(prevUrl => { // Revoke the preview URL, no longer needed
-          if (prevUrl) {
-            URL.revokeObjectURL(prevUrl);
-          }
-          return null;
-        });
-      } else {
-        // Handle upload failure
-        console.error("Upload failed:", response.status, response.statusText);
-        try {
-          const errorData = await response.json(); // Try to parse Cloudinary error
-          console.error("Cloudinary error response:", errorData);
-          setUploadMessage(`UPLOAD FAILED: ${errorData?.error?.message || response.statusText}`);
-        } catch {
-          setUploadMessage("UPLOAD FAILED"); // Fallback error message
+      try {
+        const response = await fetch(uploadUrl, {
+          method: "POST",
+          body: formData,
         }
-        setUploadSuccess(false);
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setImageUrl(data.secure_url);
+          setImage(data.secure_url); // Update state to the URL string
+          setUploadSuccess(true);
+          setUploadMessage("UPLOAD SUCCESSFUL");
+          setShowURL(true);
+          setIsInputVisible(false); // Hide preview/upload button section
+          setPreviewURL(prevUrl => { // Revoke the preview URL, no longer needed
+            if (prevUrl) {
+              URL.revokeObjectURL(prevUrl);
+            }
+            return null;
+          });
+        } else {
+          console.error("Upload failed:", response.statusText);
+          const errorData = await response.text(); // Get more error details
+          console.error("Error response:", errorData);
+          setUploadMessage("UPLOAD FAILED");
+          setUploadSuccess(false); // Ensure success state is false
+        }
+      } catch (err) {
+        console.error("Error during upload:", err);
+        setUploadMessage("UPLOAD FAILED");
+        setUploadSuccess(false); // Ensure success state is false
+      } finally {
+        setUploading(false);
+        // Re-enable button only on failure to allow retry
+        if (!uploadSuccess) {
+          setUploadButtonDisabled(false);
+        }
       }
-    } catch (err) {
-      // Handle network or other errors during fetch
-      console.error("Error during upload:", err);
-      setUploadMessage("NETWORK ERROR");
-      setUploadSuccess(false);
-    } finally {
-      // Reset loading state regardless of outcome
-      setUploading(false);
-    }
-  },
-    [image] // Dependency: image state (the File object)
+    },
+    [image] // Keep image dependency
   );
 
-  // Function to reset the component state to allow another upload
-  const resetState = useCallback(() => {
-    setImage(null);
-    setPreviewURL(prevUrl => { // Clean up preview URL
-      if (prevUrl) {
-        URL.revokeObjectURL(prevUrl);
-      }
-      return null;
-    });
-    setShowURL(false);
-    setIsInputVisible(true);
-    setUploadSuccess(false);
-    setUploadMessage("START UPLOADING");
-    setCopied(false);
-    // Reset the file input value so the same file can be selected again
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  }, []); // No dependencies needed
-
-  // --- Derived State ---
-
-  // Determine if the main upload button should be disabled
-  const uploadButtonDisabled =
-    !image || typeof image === "string" || uploading; // Disabled if no file, already uploaded (string URL), or currently uploading
-
-  // --- Render Logic ---
-
-  // Helper function to render the main content (consistent for mobile/desktop)
+  // Helper render function for common UI (desktop/mobile)
   const renderContent = () => (
-    <div className="flex flex-col justify-center items-center pt-10 md:pt-20 px-4 max-w-4xl mx-auto text-center">
+    <div className="flex flex-col justify-center items-center pt-10 md:pt-20 px-4 max-w-4xl mx-auto">
       {/* Header */}
-      <h1 className="font-bold text-5xl md:text-6xl lg:text-7xl bg-clip-text text-transparent bg-gradient-to-r from-white to-sky-500">
+      <h1 className="font-bold text-5xl md:text-6xl lg:text-7xl text-center bg-clip-text text-transparent bg-gradient-to-r from-white to-sky-500">
         Drippify
       </h1>
-      <p className="font-bold text-lg font-mono mt-4 bg-clip-text text-transparent bg-gradient-to-r from-white to-sky-500">
-        Upload and share your images instantly.
+      <p className="font-bold text-lg font-mono mt-4 text-center bg-clip-text text-transparent bg-gradient-to-r from-white to-sky-500">
+        Upload and share your images.
       </p>
 
-      {/* Main Interaction Area */}
+      {/* Upload Area */}
       <div className="w-full max-w-xl my-6 flex flex-col justify-center items-center">
-
-        {/* Input Section: Visible before successful upload */}
-        {isInputVisible && (
-          <div className="pt-8 w-full flex flex-col items-center space-y-4">
-            {/* Preview Image: Visible when a file is selected */}
-            {previewURL && (
-              <div className="relative w-full max-w-md h-64 md:h-80 rounded-3xl overflow-hidden border border-gray-700 mb-4">
+        <div className="pt-8 w-full">
+          <div className="flex flex-col items-center space-y-4 w-full">
+            {/* Preview Image */}
+            {isInputVisible && previewURL && (
+              <div className="relative w-full max-w-md h-64 md:h-80 rounded-3xl overflow-hidden border border-gray-700">
+                {/* Note: 'layout' and 'objectFit' are deprecated in newer Next.js Image. Use style or className. */}
                 <Image
                   src={previewURL}
-                  alt="Selected file preview"
-                  fill // Use fill layout
-                  style={{ objectFit: 'contain' }} // Control how image fits
-                  priority={false} // Preloading likely not needed for user uploads
-                />
+                  alt="Preview"
+                  fill // Use fill and style the parent
+                  style={{ objectFit: 'contain' }} // Use style for objectFit
+                  priority />
               </div>
             )}
 
-            {/* File Input Trigger & Upload Button */}
-            <div className="flex flex-col items-center space-y-4 w-full">
-              {/* Hidden actual file input */}
-              <input
-                id="file-upload"
-                type="file"
-                className="hidden"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept="image/png, image/jpeg, image/gif, image/webp" // Be specific about accepted types
-                disabled={uploading} // Disable input while uploading
-              />
+            {/* File Input & Select Button */}
+            {isInputVisible && (
+              <div className="flex flex-col items-center mt-4"> {/* Added margin top */}
+                <input
+                  id="file-upload"
+                  type="file"
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/*"
+                />
+                {/* Show Select File only if no image is selected yet */}
+                {!image && (
+                  <label
+                    htmlFor="file-upload"
+                    className="bg-sky-500 cursor-pointer hover:scale-105 transition-transform duration-200 text-base font-semibold font-mono px-8 py-2 rounded-full text-white flex items-center gap-2"
+                  >
+                    <FileUp size={18} />
+                    SELECT FILE...
+                  </label>
+                )}
+              </div>
+            )}
 
-              {/* Show "SELECT FILE" only if no file is selected */}
-              {!image && (
-                <label
-                  htmlFor="file-upload"
-                  className="bg-sky-500 cursor-pointer hover:scale-105 transition-transform duration-200 text-base font-semibold font-mono px-8 py-2 rounded-full text-white flex items-center gap-2"
-                >
-                  <FileUp size={18} />
-                  SELECT FILE...
-                </label>
-              )}
-
-              {/* Show Upload/Status Button only if a file is selected (and not yet uploaded) */}
-              {image && typeof image !== 'string' && (
-                <button
-                  className={`${uploadSuccess ? "bg-green-500 cursor-not-allowed" : // Success state (button remains briefly visible then area hides)
-                    uploading ? "bg-sky-700 cursor-wait" : // Uploading state
-                      "bg-sky-500 hover:bg-sky-600" // Default state
-                    } transition-colors duration-200 text-lg font-semibold font-mono px-6 py-2 rounded-full text-white flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed w-full max-w-xs`}
-                  onClick={submit}
-                  disabled={uploadButtonDisabled || uploadSuccess} // Disable if conditions met or success (before hiding)
-                >
-                  {uploading ? (
-                    <>
-                      <Loader2 className="animate-spin" size={18} />
-                      {uploadMessage}
-                    </>
-                  ) : uploadSuccess ? (
-                    <>
-                      <Check size={18} />
-                      {uploadMessage}
-                    </>
-                  ) : (
-                    <>
-                      <Upload size={18} />
-                      {uploadMessage}
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
+            {/* Upload/Status Button */}
+            {/* Show this button only if an image File is selected (not null, not string) */}
+            {isInputVisible && image && typeof image !== 'string' && (
+              <button
+                className={`${uploadSuccess ? "bg-green-500 cursor-not-allowed" : uploading ? "bg-sky-700 cursor-wait" : "bg-sky-500 hover:bg-sky-600"
+                  } transition-colors duration-200 text-lg font-semibold font-mono px-6 py-2 rounded-full text-white flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed mt-4`}
+                onClick={submit} // Removed conditional logic, handled by disabled state
+                disabled={uploading || uploadSuccess || uploadButtonDisabled} // Disable if uploading, successful, or explicitly disabled
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={18} />
+                    {uploadMessage}
+                  </>
+                ) : uploadSuccess ? (
+                  <>
+                    <Check size={18} />
+                    {uploadMessage}
+                  </>
+                ) : (
+                  <>
+                    <Upload size={18} />
+                    {uploadMessage}
+                  </>
+                )}
+              </button>
+            )}
           </div>
-        )}
+        </div>
 
-        {/* Result Section: Visible after successful upload */}
-        {showURL && typeof image === 'string' && ( // Ensure image is the URL string
-          <div className="mt-8 w-full flex flex-col items-center space-y-4">
+        {/* Result URL Section */}
+        {showURL && typeof image === 'string' && ( // Ensure image is string (URL)
+          <div className="mt-8 w-full">
             <div className="font-mono text-center text-white">
-              Thank you for choosing Drippify!
+              Thank you for choosing Drippify
               <br />
               <span>
                 We're excited to have you in our{" "}
                 <a
-                  href="https://www.thepairup.in" // Replace with actual community link if desired
+                  href="https://www.thepairup.in"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-green-500 hover:underline transition-colors"
@@ -288,27 +233,24 @@ export default function Home() {
               </span>
             </div>
 
-            {/* Link to view the image */}
-            <div className="font-mono text-center text-white">
+            <div className="mt-4 font-mono text-center text-white">
               <a
-                href={image} // Use the URL string from state
+                href={image} // Use image directly as it's the URL string now
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sky-500 hover:underline transition-colors"
               >
-                Click here to view your uploaded image
-              </a>
+                Click here!
+              </a>{" "}
+              - to view your image
             </div>
 
-            {/* URL display and Copy Button */}
-            <div className="mt-2 w-full max-w-md">
-              <div className="bg-gray-900 rounded-lg p-3 flex items-center justify-between w-full overflow-hidden border border-gray-700">
-                {/* Truncate URL display */}
-                <span className="truncate text-gray-300 text-sm pr-2 font-mono">{image}</span>
-                {/* Copy button */}
+            <div className="mt-6 w-full">
+              <div className="bg-gray-900 rounded-lg p-3 flex items-center justify-between w-full overflow-hidden">
+                <div className="truncate text-gray-300 text-sm pr-2">{image}</div> {/* Added padding right */}
                 <button
-                  className={`ml-2 flex-shrink-0 p-1 rounded ${copied ? "text-green-500" : "text-sky-500 hover:text-sky-400"
-                    } transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sky-600`}
+                  className={`ml-2 flex-shrink-0 ${copied ? "text-green-500" : "text-sky-500 hover:text-sky-400"
+                    } transition-colors duration-200`}
                   onClick={copyToClipboard}
                   aria-label="Copy URL to clipboard"
                 >
@@ -317,10 +259,27 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Button to upload another image */}
+            {/* Add button to upload another image */}
             <div className="text-center mt-6">
               <button
-                onClick={resetState} // Call the reset function
+                onClick={() => {
+                  setImage(null);
+                  setPreviewURL(prevUrl => { // Also revoke URL on reset
+                    if (prevUrl) {
+                      URL.revokeObjectURL(prevUrl);
+                    }
+                    return null;
+                  });
+                  setShowURL(false);
+                  setIsInputVisible(true);
+                  setUploadSuccess(false);
+                  setUploadMessage("START UPLOADING");
+                  setUploadButtonDisabled(true);
+                  setCopied(false);
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = ""; // Reset file input
+                  }
+                }}
                 className="bg-gray-600 hover:bg-gray-500 transition-colors duration-200 text-base font-semibold font-mono px-6 py-2 rounded-full text-white flex items-center gap-2 mx-auto"
               >
                 <Upload size={18} /> Upload Another
@@ -333,16 +292,15 @@ export default function Home() {
     </div>
   );
 
-  // --- Component Return ---
-  // Renders two divs with different background images, controlled by Tailwind's responsive classes
+  // Main return remains the same
   return (
     <main>
       {/* Desktop View */}
       <div
-        className="hidden md:block bg-black text-white min-h-screen bg-cover bg-center"
+        className="hidden md:block bg-black text-white min-h-screen bg-cover bg-center" // Simplified background props
         style={{
           backgroundImage:
-            "url('https://res.cloudinary.com/dwb211sw5/image/upload/v1717163877/linko/q9wl7sdhpqrng3t7gkcs.jpg')", // Desktop background
+            "url('https://res.cloudinary.com/dwb211sw5/image/upload/v1717163877/linko/q9wl7sdhpqrng3t7gkcs.jpg')",
         }}
       >
         {renderContent()}
@@ -350,10 +308,10 @@ export default function Home() {
 
       {/* Mobile View */}
       <div
-        className="block md:hidden bg-black text-white min-h-screen bg-cover bg-center"
+        className="block md:hidden bg-black text-white min-h-screen bg-cover bg-center" // Simplified background props
         style={{
           backgroundImage:
-            "url('https://res.cloudinary.com/dwb211sw5/image/upload/v1717164369/linko/azztvkmxxg4pxduzwch9.jpg')", // Mobile background
+            "url('https://res.cloudinary.com/dwb211sw5/image/upload/v1717164369/linko/azztvkmxxg4pxduzwch9.jpg')",
         }}
       >
         {renderContent()}
