@@ -29,7 +29,7 @@ export const metadata = {
     siteName: "Drippify",
     images: [
       {
-        url: "https://res.cloudinary.com/dwb211sw5/image/upload/v1717163877/linko/q9wl7sdhpqrng3t7gkcs.jpg",
+        url: "https://res.cloudinary.com/dwb211sw5/image/upload/v1743884454/linko/q9eiy2xr5p2rg8ngu8gp.jpg",
         width: 1200,
         height: 630,
         alt: "Drippify - Free Image to URL Converter",
@@ -40,7 +40,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "Drippify | Image to URL",
     description: "Drippify converts any image file into a shareable public link (For Free)",
-    images: ["https://res.cloudinary.com/dwb211sw5/image/upload/v1717163877/linko/q9wl7sdhpqrng3t7gkcs.jpg"],
+    images: ["https://res.cloudinary.com/dwb211sw5/image/upload/v1743884454/linko/q9eiy2xr5p2rg8ngu8gp.jpg"],
     creator: "@YourTwitterHandle", // Replace with actual handle if available
   },
   robots: {
