@@ -54,10 +54,6 @@ export const metadata = {
       "max-snippet": -1,
     },
   },
-  icons: {
-    icon: '/favicon.ico', // Make sure you have a favicon.ico in public folder
-    apple: '/apple-touch-icon.png', // Make sure you have this in public folder
-  }
 };
 
 // Viewport configuration for better mobile experience

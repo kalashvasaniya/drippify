@@ -15,6 +15,9 @@ export default function Home() {
   const [copied, setCopied] = useState(false)
   const fileInputRef = useRef(null)
   const [imageUrl, setImageUrl] = useState(null)
+  const [selectedFileType, setSelectedFileType] = useState(null)
+  const [selectedFileName, setSelectedFileName] = useState(null)
+  const [errorMessage, setErrorMessage] = useState("")
 
   const copyToClipboard = useCallback(() => {
     if (typeof image === "string") {
@@ -27,12 +30,31 @@ export default function Home() {
   const handleFileChange = useCallback(
     (e) => {
       const file = e.target.files?.[0]
+      setErrorMessage("")
+      const MAX_SIZE = 500 * 1024 * 1024 // 500MB
       if (file) {
-        setImage(file)
-        // Create a new object URL for the file
-        const objectUrl = URL.createObjectURL(file)
+        if (file.size > MAX_SIZE) {
+          setErrorMessage("File is larger than 500MB. Please choose a smaller file.")
+          setImage(null)
+          if (previewURL) {
+            URL.revokeObjectURL(previewURL)
+            setPreviewURL(null)
+          }
+          setSelectedFileType(null)
+          setSelectedFileName(null)
+          setUploadButtonDisabled(true)
+          return
+        }
 
-        // Revoke previous URL if it exists before setting a new one
+        setImage(file)
+        setSelectedFileType(file.type || "application/octet-stream")
+        setSelectedFileName(file.name || null)
+
+        let objectUrl = null
+        if (file.type?.startsWith("image/") || file.type?.startsWith("video/")) {
+          objectUrl = URL.createObjectURL(file)
+        }
+
         if (previewURL) {
           URL.revokeObjectURL(previewURL)
         }
@@ -49,6 +71,8 @@ export default function Home() {
           URL.revokeObjectURL(previewURL)
           setPreviewURL(null)
         }
+        setSelectedFileType(null)
+        setSelectedFileName(null)
         setUploadButtonDisabled(true)
       }
     },
@@ -71,7 +95,7 @@ export default function Home() {
       formData.append("folder", "linko")
 
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dwb211sw5"
-      const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`
+      const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`
 
       try {
         const response = await fetch(uploadUrl, {
@@ -122,24 +146,35 @@ export default function Home() {
         Drippify
       </h1>
       <p className="font-bold text-lg font-mono mt-4 text-center bg-clip-text text-transparent bg-gradient-to-r from-white to-sky-500">
-        Upload and share your images.
+        Upload and share your files.
       </p>
 
       {/* Upload Area */}
       <div className="w-full max-w-xl my-6 flex flex-col justify-center items-center">
         <div className="pt-8 w-full">
           <div className="flex flex-col items-center space-y-4 w-full">
-            {/* Preview Image */}
+            {/* Preview (image/video) */}
             {isInputVisible && previewURL && (
-              <div className="relative w-full max-w-md h-64 md:h-80 rounded-3xl overflow-hidden border border-gray-700">
-                <Image
-                  src={previewURL || "/placeholder.svg"}
-                  alt="Preview"
-                  fill
-                  style={{ objectFit: "contain" }}
-                  priority
-                  crossOrigin="anonymous"
-                />
+              <div className="relative w-full max-w-md h-64 md:h-80 rounded-3xl overflow-hidden border border-gray-700 flex items-center justify-center bg-black/40">
+                {selectedFileType?.startsWith("video/") ? (
+                  <video src={previewURL} controls className="w-full h-full object-contain" />
+                ) : (
+                  <Image
+                    src={previewURL || "/placeholder.svg"}
+                    alt="Preview"
+                    fill
+                    style={{ objectFit: "contain" }}
+                    priority
+                    crossOrigin="anonymous"
+                  />
+                )}
+              </div>
+            )}
+            {/* Non-previewable file information */}
+            {isInputVisible && !previewURL && image && typeof image !== "string" && (
+              <div className="w-full max-w-md rounded-3xl overflow-hidden border border-gray-700 p-4 text-center text-gray-200 bg-black/40">
+                <div className="text-sm">Selected file:</div>
+                <div className="font-mono text-xs mt-1 break-all">{selectedFileName}</div>
               </div>
             )}
 
@@ -152,7 +187,7 @@ export default function Home() {
                   className="hidden"
                   ref={fileInputRef}
                   onChange={handleFileChange}
-                  accept="image/*"
+                  accept="*/*"
                 />
                 {/* Show Select File only if no image is selected yet */}
                 {!image && (
@@ -197,6 +232,9 @@ export default function Home() {
                 )}
               </button>
             )}
+            {errorMessage && (
+              <div className="text-red-400 text-sm mt-2 text-center max-w-md">{errorMessage}</div>
+            )}
           </div>
         </div>
 
@@ -229,7 +267,7 @@ export default function Home() {
               >
                 Click here!
               </a>{" "}
-              - to view your image
+              - to view your file
             </div>
 
             <div className="mt-6 w-full">

@@ -20,6 +20,24 @@ You can start editing the page by modifying `app/page.js`. The page auto-updates
 
 This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
 
+## Password Protection
+
+This app is gated behind a simple password screen using middleware and a cookie.
+
+- Set environment variables `SITE_PASSWORD1` and/or `SITE_PASSWORD2` in `.env.local`.
+- Backwards compatible: `SITE_PASSWORD` still works if present.
+- Users are redirected to `/password` until they submit a valid password.
+- On success, a cookie `site_access_granted=true` is set for 7 days.
+
+Example `.env.local`:
+
+```
+SITE_PASSWORD1=first-secret
+SITE_PASSWORD2=second-secret
+# Optional legacy single password
+# SITE_PASSWORD=legacy-secret
+```
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
